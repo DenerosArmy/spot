@@ -1,5 +1,6 @@
 from SimpleCV import *
 from settings import base_path
+import os
 
 tags = ["pen", "pi", "key", "negative"]
 
@@ -13,4 +14,12 @@ def train(tags):
     c.train(paths, tags)
     return c
 
-classifier = train(tags)
+
+cache_path = os.path.join(base_path, "classifier.cache")
+if os.path.exists(cache_path):
+    print "Loading classifier from cache: {}".format(cache_path)
+    classifier = TreeClassifier.load(cache_path)
+else:
+    print "Training classifier..."
+    classifier = train(tags)
+    classifier.save(cache_path)
