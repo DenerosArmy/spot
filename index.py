@@ -1,5 +1,5 @@
 from arduino import LazrSystem
-from filters import VisionSystem
+from vision import VisionSystem
 
 
 class Index(object):

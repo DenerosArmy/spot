@@ -6,6 +6,55 @@ import cv
 import cv2
 import settings
 
+class ContourClassifier(object):
+
+    NEGATIVE_CLS = "negative"
+
+    def __init__(self):
+        self.cam = cv2.VideoCapture(settings.camera_index)
+        from train import classifier
+        self.classifier = classifier
+        self.objs = {}
+
+    def find_contours(self, img_arr):
+        imgray = cv2.cvtColor(img_arr, cv2.COLOR_BGR2GRAY)
+        ret,thresh = cv2.threshold(imgray, 127, 255, 0)
+        contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        return contours
+
+    def get_bounding_rect(self, cnt, img_arr, img, threshold=10, padding=10, draw=True):
+        x,y,w,h = cv2.boundingRect(cnt)
+        top_left_outer = (x-padding, y-padding)
+        bottom_right_outer = (x+w+padding, y+h+padding)
+        if w > threshold and h > threshold:
+            if draw:
+                cv2.rectangle(img_arr, top_left_outer, bottom_right_outer, (0,0,255), 1)
+                cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,255,0), 1)
+            return img.crop(top_left_outer, bottom_right_outer, smart=True)
+
+    def add_observation(self, img_arr, draw=True):
+        img = Image(img_arr)
+        for cnt in self.find_contours(img_arr):
+            obj_candidate = self.get_bounding_rect(cnt, img_arr, img, draw=draw)
+            if obj_candidate:
+                obj = self.classifier.classify(obj_candidate)
+                if obj != self.NEGATIVE_CLS:
+                    x,y,w,h = cv2.boundingRect(cnt)
+                    cv2.rectangle(img_arr, (x,y), (x+w,y+h), (255,0,0), 3)
+                    #cv.PutText(cv.fromarray(img_arr), obj, (x, y), thinFont, fontColor)
+                    #self.objs[obj] =
+
+    def step(self):
+        try:
+            print "Processing: START"
+            retval, img_arr = self.cam.read()
+            self.add_observation(img_arr)
+            cv.ShowImage("Index", cv.fromarray(img_arr))
+            print "Processing: DONE"
+            return True
+        except KeyboardInterrupt:
+            return False
+
 
 class VisionSystem(object):
 
@@ -24,8 +73,7 @@ class VisionSystem(object):
         try:
             print "Processing: START"
             retval, img_arr = self.cam.read()
-            img = Image(img_arr)
-            self.add_observation(img, annotate=True)
+            self.add_observation(img_arr, annotate=True)
             self.annotate_img(img_arr)
             cv.ShowImage("Index", cv.fromarray(img_arr))
             print "Processing: DONE"
@@ -36,7 +84,8 @@ class VisionSystem(object):
     def img_to_cvmat(self, img):
         return cv.GetMat(img.getBitmap())
 
-    def add_observation(self, img, annotate=False):
+    def add_observation(self, img_arr, annotate=False):
+        img = Image(img_arr)
         for x in xrange(0, img.width, self.dx/self.overlap_factor):
             if x + self.dx >= img.width:
                 continue
@@ -63,9 +112,16 @@ class VisionSystem(object):
                 if obj == "negative" or obj == "key":
                     continue
                 elif obj in self.objs:
-                    #if annotate:
-                        #img.drawRectangle(x, y, self.dx/2, self.dy/2, Color.BLUE)
-                        #img.drawText(obj, x, y, Color.BLUE)
+                    if annotate:
+                        fontFace = 0
+                        fontHscale = 0.75
+                        fontVscale = 0.75
+                        fontShear = 0
+                        fontThickness = 1
+                        thinFont = cv.InitFont(fontFace, fontHscale, fontVscale, fontShear, fontThickness)
+                        fontColor = cv.RGB(0, 0, 255)
+                        cv.Rectangle(cv.fromarray(img_arr), (x, y), (x+self.dx/2, y+self.dy/2), fontColor)
+                        cv.PutText(cv.fromarray(img_arr), obj, (x, y), thinFont, fontColor)
                     self.objs[obj].add_observation(observation)
                 else:
                     self.objs[obj] = VisionObjectFilter(observation, img.width, img.height, label=obj)

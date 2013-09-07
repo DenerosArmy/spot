@@ -1,7 +1,7 @@
-from filters import VisionSystem
+from vision import *
 
 def main():
-    vision_system = VisionSystem()
+    vision_system = ContourClassifier()
     while True:
         vision_system.step()
 
