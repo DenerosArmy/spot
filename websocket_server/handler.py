@@ -20,6 +20,7 @@ class SpeechHandler(tornado.web.RequestHandler):
 class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         print 'new connection'
+        global connection
         connection = self
         self.write_message("Hi, client: connection is made ...")
 
