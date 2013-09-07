@@ -1,6 +1,10 @@
 from SimpleCV import *
 
-base_path = "/Users/jian/Projects/Pinkie/training_data"
+if os.environ["USER"] == "nikita":
+    base_path = "/home/nikita/dev/pinkie/"
+else:
+    base_path = "/Users/jian/Projects/Pinkie/"
+
 tags = ["pen", "pi", "key", "negative"]
 
 def train(tags):
@@ -9,7 +13,7 @@ def train(tags):
     morph = MorphologyFeatureExtractor()
     features = [e, hue, morph]
     c = MachineLearning.TreeClassifier(features, flavor="Forest")
-    paths = [os.path.join(base_path, tag) for tag in tags]
+    paths = [os.path.join(base_path, "training_data", tag) for tag in tags]
     c.train(paths, tags)
     return c
 
