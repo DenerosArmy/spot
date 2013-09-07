@@ -44,6 +44,8 @@ class Lazr:
         # convert to angular coordinates
         theta = math.atan(math.sqrt(x**2 + y**2) / height)
         phi = math.atan2(y, x)
+        theta *= 180.0 / math.pi
+        phi *= 180.0 / math.pi
 
         # Theta is angle upwards from the vertical, in the plane containing the y' axis
         # Phi is the angle from the y' axis in the direction of the x' axis
