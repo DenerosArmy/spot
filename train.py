@@ -9,8 +9,8 @@ def train(tags):
     morph = MorphologyFeatureExtractor()
     features = [e, hue, morph]
     c = MachineLearning.TreeClassifier(features, flavor="Forest")
-    imgsets = [ImageSet(os.path.join(base_path, tag)) for tag in tags]
-    c.train(imgsets, tags)
+    paths = [os.path.join(base_path, tag) for tag in tags]
+    c.train(paths, tags)
     return c
 
 classifier = train(tags)
