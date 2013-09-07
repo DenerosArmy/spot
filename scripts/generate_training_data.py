@@ -1,12 +1,14 @@
-"""Saves test samples"""
+"""
+Saves test samples
+
+Usage: python scripts/generate_training_data.py
+"""
 from SimpleCV import Camera
 import os
-c = Camera(int(raw_input("Camera index:")))
+import settings
+c = Camera(settings.camera_index)
 name = raw_input("Object Name: ")
-if os.environ["USER"] == "nikita":
-    base_path = "/home/nikita/dev/pinkie/"
-else:
-    base_path = "/Users/jian/Projects/Pinkie/"
+base_path = settings.base_path
 os.mkdir(os.path.join(base_path, "training_data", name))
 i = 0
 print "Press [enter] to take another image, or use [q] to exit."
