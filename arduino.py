@@ -32,8 +32,8 @@ class Lazr:
 
     def convert_coordinates(self, x, y):
         X, Y = (300, 480) # Coordinates of the camera mount, in img coordinates
-        scale_x, scale_y = (1.0, 1.0) # number of pixels per cm
-        height = 60 # height of the stand, in cm
+        scale_x, scale_y = (20.0, 20.0) # number of pixels per cm
+        height = 10 # height of the stand, in cm
         x = x - X
         y = -(y - Y) # note how imgs have inverted y-coordinates
 
@@ -57,6 +57,23 @@ class Lazr:
         #    base -----> x'
 
         # Additional transformations may be needed, depending on how the servos are mounted
-        return int(theta), int(phi)
+        return theta, phi
+
+    def convert_coordinates_2(self, x, y):
+        theta, phi = self.convert_coordinates(x, y)
+        def clamp(val, low, high):
+            if val < low:
+                return low
+            elif val > high:
+                return high
+            return val
+        theta = clamp(theta, 0, 90)
+        theta = 90 - theta
+
+        phi = clamp(phi, 0, 90)
+        phi = phi + 90
+
+        # return int(theta), int(phi)
+        return int(phi), int(theta)
 
 l = Lazr()
