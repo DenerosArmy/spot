@@ -9,9 +9,13 @@ import settings
 class ContourClassifier(object):
 
     NEGATIVE_CLS = "negative"
+    WIDTH = 1280
+    HEIGHT = 720
 
     def __init__(self):
         self.cam = cv2.VideoCapture(settings.camera_index)
+        self.cam.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.WIDTH)
+        self.cam.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.HEIGHT)
         if settings.use_simplecv_display:
             _, img_arr = self.cam.read()
             self.display = SimpleCV.Display(Image(cv.fromarray(img_arr)).size())
@@ -25,36 +29,49 @@ class ContourClassifier(object):
         contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         return contours
 
-    def get_bounding_rect(self, cnt, img_arr, img, threshold=10, padding=10, draw=True):
+    def enforce_size_restrictions(self, x, y):
+        if x >= self.WIDTH:
+            x = self.WIDTH - 1
+        elif x < 0:
+            x = 0
+        if y > self.HEIGHT:
+            y = self.HEIGHT - 1
+        elif y < 0:
+            y = 0
+        return x, y
+
+    def get_bounding_rect(self, cnt, img_arr, img, min_threshold=50, max_threshold=300, padding=10, draw=True, debug=True):
         x,y,w,h = cv2.boundingRect(cnt)
-        top_left_outer = (x-padding if x-padding >= 0 else 0,
-                          y-padding if y-padding >= 0 else 0)
-        bottom_right_outer = (x+w+padding if x+w+padding <= img.width else img.width,
-                              y+h+padding if y+h+padding <= img.height else img.height)
-        if w > threshold and h > threshold:
+        top_left_outer = self.enforce_size_restrictions(x-padding, y-padding)
+        bottom_right_outer = self.enforce_size_restrictions(x+w+padding, y+h+padding)
+        if w > min_threshold and h > min_threshold and w < max_threshold and h < max_threshold:
             if draw:
-                cv2.rectangle(img_arr, top_left_outer, bottom_right_outer, (0,0,255), 1)
-                cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,255,0), 1)
-            #print top_left_outer, w+padding, h+padding
-            return img.crop(top_left_outer[0], top_left_outer[1],
-                            bottom_right_outer[0]-top_left_outer[0],
-                            bottom_right_outer[1]-top_left_outer[1])
+                cv2.rectangle(img_arr, top_left_outer, bottom_right_outer, (255,0,0), 1)
+                cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,0,255), 1)
+                if debug:
+                    cv2.putText(img_arr, "{0}x{1}".format(w,h), (x, y), 0, 0.5, (0,0,255))
+            if (bottom_right_outer[0]-top_left_outer[0] >= 0 and bottom_right_outer[1]-top_left_outer[1] >= 0):
+                return img.crop(top_left_outer[0], top_left_outer[1],
+                                bottom_right_outer[0]-top_left_outer[0],
+                                bottom_right_outer[1]-top_left_outer[1])
 
     def add_observation(self, img_arr, draw=True):
         img = Image(img_arr)
         for cnt in self.find_contours(img_arr):
             obj_candidate = self.get_bounding_rect(cnt, img_arr, img, draw=draw)
             #if obj_candidate:
-                #obj = self.classifier.classify(obj_candidate)
-                #if obj != self.NEGATIVE_CLS:
-                    #x,y,w,h = cv2.boundingRect(cnt)
-                    #cv2.rectangle(img_arr, (x,y), (x+w,y+h), (255,0,0), 3)
-                    #cv.PutText(cv.fromarray(img_arr), obj, (x, y), thinFont, fontColor)
-                    #self.objs[obj] =
+                #try:
+                    #obj = self.classifier.classify(obj_candidate)
+                    #if obj != self.NEGATIVE_CLS:
+                        #x,y,w,h = cv2.boundingRect(cnt)
+                        #cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,255,0), 2)
+                        #cv2.putText(img_arr, obj, (x, y), 0, 0.5, (0,255,0))
+                        #"""self.objs[obj] ="""
+                #except IndexError:
+                    #print "Wrong feature length."
 
-    def step(self):
+    def step(self, pause=False):
         try:
-            #print "Processing: START"
             retval, img_arr = self.cam.read()
             assert img_arr is not None, "Camera in use by other process"
             self.add_observation(img_arr)
@@ -66,7 +83,8 @@ class ContourClassifier(object):
                     self.display.done = True
             else:
                 cv.ShowImage("Index", cv.fromarray(img_arr))
-            #print "Processing: DONE"
+                if pause:
+                    raw_input("Press [enter] to continue")
             return True
         except KeyboardInterrupt:
             return False
