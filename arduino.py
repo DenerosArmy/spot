@@ -25,6 +25,7 @@ class Lazr:
         self.ser.read
         
     def debug(self, command):
-	    self.ser.write(command)
+	    self.ser.write(command + "\n")
 	    self.ser.flush()
 	    
+l = Lazr()

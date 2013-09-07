@@ -102,19 +102,20 @@ void line(int theta1, int phi1, int theta2, int phi2, int time, int dt) {
   Serial.println(dt);
   
   
-  int dth = (theta2 - theta1) / (time / dt);
-  int dph = (phi2 - phi1) / (time / dt);
-  
-  if (dth == 0) dth = 1;
-  if (dph == 0) dph = 1;
-  
-  int theta = theta1, phi = phi1;  
-  
-  for (int i = 0; i < time; i += dt) {
+  int theta = theta1;
+  int phi = phi1;
+  int t = 0;
+  while (theta != theta2 || phi != phi2) {
+    t += dt;
+    if (t > time) {
+      pan.write(theta2);
+      tilt.write(phi2);
+      break;
+    }
+    theta = theta1 + (theta2 - theta1) * t / time;
+    phi = phi1 + (phi2 - phi1) * t / time;
+    delay(dt);
     pan.write(theta);
     tilt.write(phi);
-    theta += dth;
-    phi += dph;
-    delay(dt);
   }
 }
