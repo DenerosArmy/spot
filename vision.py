@@ -71,15 +71,15 @@ class ContourClassifier(object):
             if obj_candidate:
                 x, y, obj_candidate = obj_candidate
                 width, height = obj_candidate.size()
-                l = 45
-                for extractor in self.classifier.mFeatureExtractors:
-                    val = extractor.extract(obj_candidate)
-                    if not val:
-                        continue
-                    l -= len(extractor.extract(obj_candidate))
-                if l > 0:
-                    print "Wrong feature length", l
-                    continue
+                # l = 45
+                # for extractor in self.classifier.mFeatureExtractors:
+                #     val = extractor.extract(obj_candidate)
+                #     if not val:
+                #         continue
+                #     l -= len(extractor.extract(obj_candidate))
+                # if l > 0:
+                #     print "Wrong feature length", l
+                #     continue
 
                 obj = self.classifier.classify(obj_candidate)
                 observation = ((x + width/2), (y + height/2)), 0.0
