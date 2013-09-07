@@ -24,33 +24,38 @@ class ContourClassifier(object):
 
     def get_bounding_rect(self, cnt, img_arr, img, threshold=10, padding=10, draw=True):
         x,y,w,h = cv2.boundingRect(cnt)
-        top_left_outer = (x-padding, y-padding)
-        bottom_right_outer = (x+w+padding, y+h+padding)
+        top_left_outer = (x-padding if x-padding >= 0 else 0,
+                          y-padding if y-padding >= 0 else 0)
+        bottom_right_outer = (x+w+padding if x+w+padding <= img.width else img.width,
+                              y+h+padding if y+h+padding <= img.height else img.height)
         if w > threshold and h > threshold:
             if draw:
                 cv2.rectangle(img_arr, top_left_outer, bottom_right_outer, (0,0,255), 1)
                 cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,255,0), 1)
-            return img.crop(top_left_outer, bottom_right_outer, smart=True)
+            #print top_left_outer, w+padding, h+padding
+            return img.crop(top_left_outer[0], top_left_outer[1],
+                            bottom_right_outer[0]-top_left_outer[0],
+                            bottom_right_outer[1]-top_left_outer[1], smart=True)
 
     def add_observation(self, img_arr, draw=True):
         img = Image(img_arr)
         for cnt in self.find_contours(img_arr):
             obj_candidate = self.get_bounding_rect(cnt, img_arr, img, draw=draw)
-            if obj_candidate:
-                obj = self.classifier.classify(obj_candidate)
-                if obj != self.NEGATIVE_CLS:
-                    x,y,w,h = cv2.boundingRect(cnt)
-                    cv2.rectangle(img_arr, (x,y), (x+w,y+h), (255,0,0), 3)
+            #if obj_candidate:
+                #obj = self.classifier.classify(obj_candidate)
+                #if obj != self.NEGATIVE_CLS:
+                    #x,y,w,h = cv2.boundingRect(cnt)
+                    #cv2.rectangle(img_arr, (x,y), (x+w,y+h), (255,0,0), 3)
                     #cv.PutText(cv.fromarray(img_arr), obj, (x, y), thinFont, fontColor)
                     #self.objs[obj] =
 
     def step(self):
         try:
-            print "Processing: START"
+            #print "Processing: START"
             retval, img_arr = self.cam.read()
             self.add_observation(img_arr)
             cv.ShowImage("Index", cv.fromarray(img_arr))
-            print "Processing: DONE"
+            #print "Processing: DONE"
             return True
         except KeyboardInterrupt:
             return False

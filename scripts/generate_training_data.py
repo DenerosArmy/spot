@@ -11,7 +11,7 @@ c = Camera(settings.camera_index)
 name = raw_input("Object Name: ")
 base_path = settings.base_path
 os.mkdir(os.path.join(base_path, "training_data", name))
-i = 0
+i = 1
 print "Press [enter] to take another image, or use [q] to exit."
 while raw_input() != "q":
     img = c.getImage()
