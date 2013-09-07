@@ -277,16 +277,6 @@ if (!('webkitSpeechRecognition' in window)) {
     }
   };
 
- function httpGet(theUrl)
-	{
-    var xmlHttp = null;
-
-    xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", theUrl, false );
-    xmlHttp.send( null );
-    return xmlHttp.responseText;
-	}
-
   recognition.onresult = function(event) {
     var interim_transcript = '';
     for (var i = event.resultIndex; i < event.results.length; ++i) {
@@ -297,12 +287,24 @@ if (!('webkitSpeechRecognition' in window)) {
       }
     }
 
-		var keywords = ["pen", "calculator", "keys"];
+		var keywords = ["pen", "10", "pan", "pants", "iPad", "Arduino", "art", "Rd", "Argentina", "keys", "key", "Mikey"];
 		for (var i = 0; i < keywords.length; i++) {
 			if (final_transcript.search(keywords[i]) != -1) {
 				console.log("Detected " + keywords[i]);
 				$.get("http://pythonscript.richiezeng.com:8888/speech?word=" + keywords[i]);
+				recognition.stop();
 				final_transcript = '';
+				setTimeout(function () {
+					recognition.lang = select_dialect.value;
+					recognition.start();
+					ignore_onend = false;
+					final_span.innerHTML = '';
+					interim_span.innerHTML = '';
+					start_img.src = 'mic-slash.gif';
+					showInfo('info_allow');
+					showButtons('none');
+					start_timestamp = event.timeStamp;
+				}, 500);
 			}
 		}
 

@@ -14,7 +14,7 @@ class SpeechHandler(tornado.web.RequestHandler):
     def get(self):
         word = self.get_argument('word', True)
         print word
-        #connection.write_message(word)
+        connection.write_message(word)
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
