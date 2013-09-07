@@ -59,16 +59,16 @@ class ContourClassifier(object):
         img = Image(img_arr)
         for cnt in self.find_contours(img_arr):
             obj_candidate = self.get_bounding_rect(cnt, img_arr, img, draw=draw)
-            #if obj_candidate:
-                #try:
-                    #obj = self.classifier.classify(obj_candidate)
-                    #if obj != self.NEGATIVE_CLS:
-                        #x,y,w,h = cv2.boundingRect(cnt)
-                        #cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,255,0), 2)
-                        #cv2.putText(img_arr, obj, (x, y), 0, 0.5, (0,255,0))
-                        #"""self.objs[obj] ="""
-                #except IndexError:
-                    #print "Wrong feature length."
+            if obj_candidate:
+                try:
+                    obj = self.classifier.classify(obj_candidate)
+                    if obj != self.NEGATIVE_CLS:
+                        x,y,w,h = cv2.boundingRect(cnt)
+                        cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,255,0), 2)
+                        cv2.putText(img_arr, obj, (x, y), 0, 0.5, (0,255,0))
+                        """self.objs[obj] ="""
+                except IndexError:
+                    print "Wrong feature length."
 
     def step(self, pause=False):
         try:
