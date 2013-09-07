@@ -1,9 +1,5 @@
 from SimpleCV import *
-
-if os.environ["USER"] == "nikita":
-    base_path = "/home/nikita/dev/pinkie/"
-else:
-    base_path = "/Users/jian/Projects/Pinkie/"
+from settings import base_path
 
 tags = ["pen", "pi", "key", "negative"]
 
