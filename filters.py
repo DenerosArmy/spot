@@ -1,11 +1,16 @@
 import math, random, collections
 import numpy as np
 from time import time
-from SimpleCV import Color
+from SimpleCV import Camera, Color, Display
+import settings
 # from util import *
 
 class VisionSystem(object):
-    def __init__(self, dx, dy, overlap_factor):
+    def __init__(self, dx=150, dy=150, overlap_factor=2):
+        self.cam = Camera(settings.camera_index)
+        self.img = self.cam.getImage()
+        self.display = Display(self.img.size())
+
         self.dx = dx
         self.dy = dy
         self.overlap_factor = overlap_factor
@@ -14,7 +19,20 @@ class VisionSystem(object):
 
         self.objs = {}
 
-    def add_observation(self, img):
+    def step(self):
+        if self.display.isDone():
+            raise SystemExit, "Exiting"
+        try:
+            img = self.cam.getImage()
+            self.add_observation(img, annotate=True)
+            self.annotate_img(img)
+            img.save(self.display)
+            if self.display.mouseLeft or self.display.mouseRight:
+                self.display.done = True
+        except KeyboardInterrupt:
+            self.display.done = True
+
+    def add_observation(self, img, annotate=False):
         for x in xrange(0, img.width, self.dx/self.overlap_factor):
             if x + self.dx >= img.width:
                 continue
@@ -33,30 +51,40 @@ class VisionSystem(object):
                 #     print "Wrong feature length", l
                 #     continue
                 # print "classifying"
-                cls = self.classifier.classify(im)
+                obj = self.classifier.classify(im)
                 # print "done classifying"
 
                 observation = ((x+self.dx)/2, (y+self.dy)/2), 0.0
 
-                if cls == "negative" or cls == "key":
+                if obj == "negative" or obj == "key":
                     continue
-                elif cls in self.objs:
-                    img.drawRectangle(x, y, self.dx/2, self.dy/2, Color.BLUE)
-                    img.drawText(cls, x, y, Color.BLUE)
-                    self.objs[cls].add_observation(observation)
+                elif obj in self.objs:
+                    if annotate:
+                        img.drawRectangle(x, y, self.dx/2, self.dy/2, Color.BLUE)
+                        img.drawText(obj, x, y, Color.BLUE)
+                    self.objs[obj].add_observation(observation)
                 else:
-                    self.objs[cls] = VisionObjectFilter(observation, img.width, img.height, label=cls)
+                    self.objs[obj] = VisionObjectFilter(observation, img.width, img.height, label=obj)
 
     def annotate_img(self, img):
-        for cls, vof in self.objs.items():
+        for obj in self.objs:
             try:
-                (x, y), z = vof.infer_state()
+                x, y = self.get_state(obj)
                 x -= self.dx/2
                 y -= self.dy/2
-            except ValueError:
+            except TypeError:
                 continue
             img.drawRectangle(x, y, self.dx, self.dy, Color.RED)
-            img.drawText(cls, x, y, Color.RED)
+            img.drawText(obj, x, y, Color.RED)
+
+    def get_state(self, obj):
+        if obj not in self.objs:
+            return None
+        try:
+            (x, y), z = self.objs[obj].infer_state()
+            return x, y
+        except ValueError:
+            return None
 
 class VisionObjectFilter(object):
     def __init__(self, initial_observation, tracking_bounds_width, tracking_bounds_height, label="entity"):

@@ -1,5 +1,5 @@
 from arduino import LazrSystem
-from vision import VisionSystem
+from filters import VisionSystem
 
 
 class Index(object):
@@ -19,3 +19,8 @@ class Index(object):
 
     def step(self):
         self.vsys.step()
+
+if __name__ == '__main__':
+    idx = Index()
+    while True:
+        idx.step()
