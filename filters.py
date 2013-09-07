@@ -15,18 +15,30 @@ class VisionSystem(object):
         self.objs = {}
 
     def add_observation(self, img):
-        for x in range(0, img.width, self.dx/self.overlap_factor):
-            for y in range(0, img.height, self.dy/self.overlap_factor):
+        for x in xrange(0, img.width, self.dx/self.overlap_factor):
+            if x + self.dx >= img.width:
+                continue
+            for y in xrange(0, img.height, self.dy/self.overlap_factor):
+                if y + self.dy >= img.height:
+                    continue
                 im = img.crop(x, y, self.dx, self.dy)
-                for extractor in self.classifier.mFeatureExtractors:
-                    if not extractor.extract(im):
-                        print "Failed to extract"
-                        continue
+
+                # l = 45
+                # for extractor in self.classifier.mFeatureExtractors:
+                #     val = extractor.extract(im)
+                #     if not val:
+                #         continue
+                #     l -= len(extractor.extract(im))
+                # if l > 0:
+                #     print "Wrong feature length", l
+                #     continue
+                # print "classifying"
                 cls = self.classifier.classify(im)
+                # print "done classifying"
 
                 observation = ((x+self.dx)/2, (y+self.dy)/2), 0.0
 
-                if cls == "negative":
+                if cls == "negative" or cls == "key":
                     continue
                 elif cls in self.objs:
                     img.drawRectangle(x, y, self.dx/2, self.dy/2, Color.BLUE)
