@@ -18,9 +18,9 @@ class Index(object):
             self.point_at_coordinates(state[0], state[1])
 
     def step(self):
-        self.vsys.step()
+        return self.vsys.step()
 
 if __name__ == '__main__':
     idx = Index()
-    while True:
-        idx.step()
+    while idx.step():
+        pass

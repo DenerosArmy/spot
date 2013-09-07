@@ -2,7 +2,7 @@ from SimpleCV import *
 from settings import base_path
 import os
 
-tags = ["pen", "pi", "key", "negative"]
+tags = ["pen", "arduino", "key", "negative"]
 
 def train(tags):
     e = EdgeHistogramFeatureExtractor()
@@ -15,8 +15,9 @@ def train(tags):
     return c
 
 
+retrain = False
 cache_path = os.path.join(base_path, "classifier.cache")
-if os.path.exists(cache_path):
+if not retrain and os.path.exists(cache_path):
     print "Loading classifier from cache: {}".format(cache_path)
     classifier = TreeClassifier.load(cache_path)
 else:

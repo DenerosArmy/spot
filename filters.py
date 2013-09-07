@@ -1,15 +1,16 @@
 import math, random, collections
 import numpy as np
-from time import time
-from SimpleCV import Camera, Color, Display
+import time as tm
+from SimpleCV import *
+import cv
+import cv2
 import settings
-# from util import *
+
 
 class VisionSystem(object):
+
     def __init__(self, dx=150, dy=150, overlap_factor=2):
-        self.cam = Camera(settings.camera_index)
-        self.img = self.cam.getImage()
-        self.display = Display(self.img.size())
+        self.cam = cv2.VideoCapture(settings.camera_index)
 
         self.dx = dx
         self.dy = dy
@@ -20,17 +21,20 @@ class VisionSystem(object):
         self.objs = {}
 
     def step(self):
-        if self.display.isDone():
-            raise SystemExit, "Exiting"
         try:
-            img = self.cam.getImage()
+            print "Processing: START"
+            retval, img_arr = self.cam.read()
+            img = Image(img_arr)
             self.add_observation(img, annotate=True)
-            self.annotate_img(img)
-            img.save(self.display)
-            if self.display.mouseLeft or self.display.mouseRight:
-                self.display.done = True
+            self.annotate_img(img_arr)
+            cv.ShowImage("Index", cv.fromarray(img_arr))
+            print "Processing: DONE"
+            return True
         except KeyboardInterrupt:
-            self.display.done = True
+            return False
+
+    def img_to_cvmat(self, img):
+        return cv.GetMat(img.getBitmap())
 
     def add_observation(self, img, annotate=False):
         for x in xrange(0, img.width, self.dx/self.overlap_factor):
@@ -59,9 +63,9 @@ class VisionSystem(object):
                 if obj == "negative" or obj == "key":
                     continue
                 elif obj in self.objs:
-                    if annotate:
-                        img.drawRectangle(x, y, self.dx/2, self.dy/2, Color.BLUE)
-                        img.drawText(obj, x, y, Color.BLUE)
+                    #if annotate:
+                        #img.drawRectangle(x, y, self.dx/2, self.dy/2, Color.BLUE)
+                        #img.drawText(obj, x, y, Color.BLUE)
                     self.objs[obj].add_observation(observation)
                 else:
                     self.objs[obj] = VisionObjectFilter(observation, img.width, img.height, label=obj)
@@ -70,12 +74,21 @@ class VisionSystem(object):
         for obj in self.objs:
             try:
                 x, y = self.get_state(obj)
+                x = int(x)
+                y = int(y)
                 x -= self.dx/2
                 y -= self.dy/2
             except TypeError:
                 continue
-            img.drawRectangle(x, y, self.dx, self.dy, Color.RED)
-            img.drawText(obj, x, y, Color.RED)
+            fontFace = 0
+            fontHscale = 0.75
+            fontVscale = 0.75
+            fontShear = 0
+            fontThickness = 1
+            thinFont = cv.InitFont(fontFace, fontHscale, fontVscale, fontShear, fontThickness)
+            fontColor = cv.RGB(255, 0, 0)
+            cv.Rectangle(cv.fromarray(img), (x, y), (x+self.dx, y+self.dy), fontColor)
+            cv.PutText(cv.fromarray(img), obj, (x, y), thinFont, fontColor)
 
     def get_state(self, obj):
         if obj not in self.objs:
@@ -91,15 +104,15 @@ class VisionObjectFilter(object):
         self.label = label
         self.observations = set()
         self.kalman_filter = KalmanFilter(initial_observation)
-        self.last_obs_t = time()
+        self.last_obs_t = tm.time()
         self.slack_time = 2
 
     def add_observation(self, observation):
-        self.last_obs_t = time()
+        self.last_obs_t = tm.time()
         self.observations.add(observation)
 
     def infer_state(self):
-        if time() - self.last_obs_t > self.slack_time:
+        if tm.time() - self.last_obs_t > self.slack_time:
             return set()
 
         #detections = hard_filter(self.observations)
@@ -125,7 +138,7 @@ class KalmanFilter(object):
   """
 
   def __init__(self, initial_observation):
-      self.prev_t = time()
+      self.prev_t = tm.time()
       self.dt = 0
       self.u = np.matrix([[0],[0],[0]]) # Previous velocity
       self.C = np.matrix([[1,0,0,0,0,0],
@@ -198,7 +211,7 @@ class KalmanFilter(object):
       #return 1
 
   def predict(self):
-      t = time()
+      t = tm.time()
       self.dt = t - self.prev_t
       self.prev_t = t
       A = self.A
