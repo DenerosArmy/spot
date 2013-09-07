@@ -53,8 +53,12 @@ class ContourClassifier(object):
         try:
             #print "Processing: START"
             retval, img_arr = self.cam.read()
+            assert img_arr is not None, "Camera in use by other process"
             self.add_observation(img_arr)
-            cv.ShowImage("Index", cv.fromarray(img_arr))
+            if settings.use_simplecv_display:
+                SimpleCV.Image(cv.fromarray(img_arr)).show()
+            else:
+                cv.ShowImage("Index", cv.fromarray(img_arr))
             #print "Processing: DONE"
             return True
         except KeyboardInterrupt:
