@@ -1,10 +1,64 @@
 import math, random, collections
 import numpy as np
 from time import time
-from util import *
+from SimpleCV import Color
+# from util import *
 
-class VisionFilter(object):
+class VisionSystem(object):
+    def __init__(self, dx, dy, overlap_factor):
+        self.dx = dx
+        self.dy = dy
+        self.overlap_factor = overlap_factor
+        from train import classifier
+        self.classifier = classifier
 
+        self.objs = {}
+
+    def add_observation(self, img):
+        for x in xrange(0, img.width, self.dx/self.overlap_factor):
+            if x + self.dx >= img.width:
+                continue
+            for y in xrange(0, img.height, self.dy/self.overlap_factor):
+                if y + self.dy >= img.height:
+                    continue
+                im = img.crop(x, y, self.dx, self.dy)
+
+                # l = 45
+                # for extractor in self.classifier.mFeatureExtractors:
+                #     val = extractor.extract(im)
+                #     if not val:
+                #         continue
+                #     l -= len(extractor.extract(im))
+                # if l > 0:
+                #     print "Wrong feature length", l
+                #     continue
+                # print "classifying"
+                cls = self.classifier.classify(im)
+                # print "done classifying"
+
+                observation = ((x+self.dx)/2, (y+self.dy)/2), 0.0
+
+                if cls == "negative" or cls == "key":
+                    continue
+                elif cls in self.objs:
+                    img.drawRectangle(x, y, self.dx/2, self.dy/2, Color.BLUE)
+                    img.drawText(cls, x, y, Color.BLUE)
+                    self.objs[cls].add_observation(observation)
+                else:
+                    self.objs[cls] = VisionObjectFilter(observation, img.width, img.height, label=cls)
+
+    def annotate_img(self, img):
+        for cls, vof in self.objs.items():
+            try:
+                (x, y), z = vof.infer_state()
+                x -= self.dx/2
+                y -= self.dy/2
+            except ValueError:
+                continue
+            img.drawRectangle(x, y, self.dx, self.dy, Color.RED)
+            img.drawText(cls, x, y, Color.RED)
+
+class VisionObjectFilter(object):
     def __init__(self, initial_observation, tracking_bounds_width, tracking_bounds_height, label="entity"):
         self.label = label
         self.observations = set()
@@ -27,10 +81,10 @@ class VisionFilter(object):
         #detection = self.kalman_filter.predict()
         #return detection
 
-        detections = hard_filter(self.observations)
+        # detections = hard_filter(self.observations)
+        for observation in self.observations:
+            self.kalman_filter.update(observation)
         self.observations = set()
-        for observation in detections:
-          self.kalman_filter.update(observation)
         detection = self.kalman_filter.predict()
         return detection
 
