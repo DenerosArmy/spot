@@ -12,6 +12,9 @@ class ContourClassifier(object):
 
     def __init__(self):
         self.cam = cv2.VideoCapture(settings.camera_index)
+        if settings.use_simplecv_display:
+            _, img_arr = self.cam.read()
+            self.display = SimpleCV.Display(Image(cv.fromarray(img_arr)).size())
         from train import classifier
         self.classifier = classifier
         self.objs = {}
@@ -56,7 +59,11 @@ class ContourClassifier(object):
             assert img_arr is not None, "Camera in use by other process"
             self.add_observation(img_arr)
             if settings.use_simplecv_display:
-                SimpleCV.Image(cv.fromarray(img_arr)).show()
+                if self.display.isDone():
+                    raise SystemExit, "exiting"
+                SimpleCV.Image(cv.fromarray(img_arr)).save(self.display)
+                if self.display.mouseLeft or self.display.mouseRight:
+                    self.display.done = True
             else:
                 cv.ShowImage("Index", cv.fromarray(img_arr))
             #print "Processing: DONE"
