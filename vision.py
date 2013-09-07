@@ -38,7 +38,7 @@ class ContourClassifier(object):
             #print top_left_outer, w+padding, h+padding
             return img.crop(top_left_outer[0], top_left_outer[1],
                             bottom_right_outer[0]-top_left_outer[0],
-                            bottom_right_outer[1]-top_left_outer[1], smart=True)
+                            bottom_right_outer[1]-top_left_outer[1])
 
     def add_observation(self, img_arr, draw=True):
         img = Image(img_arr)
