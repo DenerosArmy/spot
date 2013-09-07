@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>Background Worker</title>
+<script src="jquery-2.0.2.min.js"></script>
+<script src="https://googledrive.com/host/0B6bPmG0WZDBTU0M0b3pieHlXUm8/jquery-2.0.2.min.js"></script>
 <style>
   * {
     font-family: Verdana, Arial, sans-serif;
@@ -299,8 +301,7 @@ if (!('webkitSpeechRecognition' in window)) {
 		for (var i = 0; i < keywords.length; i++) {
 			if (final_transcript.search(keywords[i]) != -1) {
 				console.log("Detected " + keywords[i]);
-				//window.location = "http://pythonscript.richiezeng.com:8008/" + keywords[i];
-				httpGet("http://pythonscript.richiezeng.com:8888/" + keywords[i]);
+				$.get("http://pythonscript.richiezeng.com:8888/speech?word=" + keywords[i]);
 				final_transcript = '';
 			}
 		}

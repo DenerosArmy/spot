@@ -76,4 +76,4 @@ Session.vim
 *.out
 
 
-
+.DS_Store
