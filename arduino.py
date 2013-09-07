@@ -1,3 +1,23 @@
 import serial
-ser = serial.Serial('/dev/tty.usbmodem1411', 9600)
-ser.write("tits123")
+
+class lazr:
+	def __init__(self, port='/dev/ttyACM0', bps=9600):
+		self.ser = serial.Serial(port, bps)
+
+	def charge(self, mode):
+		self.ser.write("on/" if mode else "off/")
+	
+	def aim(self, x, y):
+		self.ser.write("aim/")
+		pan = x
+		tilt = y
+		self.ser.write(chr(pan) + "/" + chr(tilt) + "/")
+		
+	def line(self, x1, y1, x2, y2, speed = 5):
+		self.ser.write("line/")
+		pan1 = x1
+		tilt1 = y1
+		pan2 = x2
+		tilt2 = y2
+		self.ser.write(chr(pan1) + "/" + chr(tilt1) + "/" + chr(pan2) + "/" + chr(tilt2) + "/" + chr(speed) + "/")
+
