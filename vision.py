@@ -9,6 +9,8 @@ import settings
 class ContourClassifier(object):
 
     NEGATIVE_CLS = "negative"
+    WIDTH = 1280
+    HEIGHT = 720
 
     def __init__(self):
         self.cam = cv2.VideoCapture(settings.camera_index)
