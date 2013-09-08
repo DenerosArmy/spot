@@ -7,7 +7,7 @@ import settings
 class Index(object):
 
     def __init__(self):
-        self.lazr = LazrSystem()
+        self.lazr = Lazr()
         self.vsys = ContourClassifier()
 
     def take_picture(self, filename):
@@ -16,7 +16,7 @@ class Index(object):
 
     def point_at_coordinates(self, x, y):
         self.lazr.charge(True)
-        self.lazr.aim(x, y)
+        self.lazr.aim_to_xy(x, y)
 
     def point_at_obj(self, obj):
         state = self.vsys.get_state(obj)
@@ -28,5 +28,6 @@ class Index(object):
 
 if __name__ == '__main__':
     idx = Index()
-    while idx.step():
-        pass
+    idx.lazr.charge(False)
+    #while idx.step():
+	#idx.point_at_obj("key")
