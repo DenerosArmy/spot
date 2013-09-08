@@ -287,14 +287,34 @@ if (!('webkitSpeechRecognition' in window)) {
       }
     }
 
-		var keywords = ["pen", "10", "pan", "pants", "iPad", "Arduino", "art", "Rd", "Argentina", "keys", "key", "Mikey", "picture", "photo"];
-		for (var i = 0; i < keywords.length; i++) {
-			if (final_transcript.search(keywords[i]) != -1) {
-				console.log("Detected " + keywords[i]);
-				$.get("http://pythonscript.richiezeng.com:8888/speech?word=" + keywords[i]);
-				recognition.stop();
-				final_transcript = '';
-				setTimeout(function () {
+		var foundWords = [];
+		var keywords = {
+			"pen": ["pen", "10", "pan", "pants", "iPad"],
+			"arduino": ["Arduino", "art", "Rd", "Argentina"],
+			"keys": ["keys", "key", "Mikey"],
+			"photo": ["picture", "photo"],
+			"spot": ["spot", "Scott", "Facebook"],
+		};
+
+		for (var word in keywords) {
+			for (var i = 0; i < keywords[word].length; i++) {
+				if (final_transcript.search(keywords[word][i]) != -1) {
+					console.log("Detected " + keywords[word][i]);
+					foundWords.push(word);
+					break;
+				}
+			}
+		}
+
+		for (var i = 0; i < foundWords.length; i++) {
+			$.get("http://pythonscript.richiezeng.com:8888/speech?word=" + foundWords[i]);
+		}
+
+		if (foundWords.length > 0) {
+			final_transcript = '';
+			recognition.stop();
+
+			setTimeout(function () {
 					recognition.lang = select_dialect.value;
 					recognition.start();
 					ignore_onend = false;
@@ -305,7 +325,6 @@ if (!('webkitSpeechRecognition' in window)) {
 					showButtons('none');
 					start_timestamp = event.timeStamp;
 				}, 500);
-			}
 		}
 
     final_transcript = capitalize(final_transcript);

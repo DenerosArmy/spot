@@ -4,8 +4,8 @@ import time
 import dropbox
 import websocket
 
-import settings
-from index import Index
+#import settings
+#from index import Index
 from keys import app_key, app_secret
 
 
@@ -15,13 +15,21 @@ idx = None
 
 def on_message(ws, message):
     print message
-    if 'picture' in message and access_token:
+    if access_token and "photo" in message:
         date_time = time.strftime("IMG_%Y-%m-%d_%H:%M:%S.png", time.gmtime())
         idx.take_picture(date_time)
         f = open(settings.base_path + 'pics/' + filename)
         client = dropbox.client.DropboxClient(access_token)
         response = client.put_file('/' + date_time, f)
         print "Uploaded: ", response
+    elif "pen" in message:
+        print "Finding pen"
+    elif "arduino" in message:
+        print "Finding Arduino"
+    elif "keys" in message:
+        print "Finding keys"
+    elif "spot" in message:
+        print "Beep beep"
 
 
 def on_error(ws, error):
@@ -33,11 +41,11 @@ def on_close(ws):
 
 def on_open(ws):
     global idx
-    idx = Index()
-    def run():
-        while idx.step():
-            pass
-    thread.start_new_thread(run, ())
+    #idx = Index()
+    #def run():
+    #    while idx.step():
+    #        pass
+    #thread.start_new_thread(run, ())
 
 
 if __name__ == "__main__":
