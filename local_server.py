@@ -7,7 +7,7 @@ import dropbox
 import websocket
 
 #import settings
-#from index import Index
+from index import Index
 from keys import app_key, app_secret
 
 
@@ -18,6 +18,13 @@ idx = None
 def play_audio_mac():
     sound = "sounds/R2D2" + choice(["a", "b", "c", "e"]) + ".wav"
     return_code = subprocess.call(["afplay", sound])
+
+
+def play_audio_ubuntu(letter):
+    sound = "sounds/R2D2" + letter + ".wav"
+    import pygame
+    pygame.init()
+    pygame.mixer.Sound(sound).play()
 
 
 def on_message(ws, message):
@@ -31,13 +38,17 @@ def on_message(ws, message):
         print "Uploaded: ", response
     elif "pen" in message:
         print "Finding pen"
+        play_audio_ubuntu("c")
     elif "arduino" in message:
         print "Finding Arduino"
+        play_audio_ubuntu("c")
     elif "keys" in message:
         print "Finding keys"
+        play_audio_ubuntu("c")
     elif "spot" in message:
         print "Beep beep"
-    play_audio_mac()
+        play_audio_ubuntu("a")
+    #play_audio_mac()
 
 
 def on_error(ws, error):
@@ -49,11 +60,11 @@ def on_close(ws):
 
 def on_open(ws):
     global idx
-    #idx = Index()
-    #def run():
-    #    while idx.step():
-    #        pass
-    #thread.start_new_thread(run, ())
+    idx = Index()
+    def run():
+        while idx.step():
+            pass
+    thread.start_new_thread(run, ())
 
 
 if __name__ == "__main__":
