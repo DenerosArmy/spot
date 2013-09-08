@@ -3,7 +3,6 @@ import time
 import math
 
 class Lazr(object):
-
     def __init__(self, port='/dev/ttyACM1', bps=9600):
         self.ser = serial.Serial(port, bps)
         self.ser.flush()

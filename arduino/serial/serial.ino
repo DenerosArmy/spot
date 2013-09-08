@@ -4,7 +4,7 @@ String incomingString = String("");
 Servo pan, tilt;
 
 int theta = 0, phi = 0;
-int panPin = 10, tiltPin = 11, buttonPin = 12; 
+int panPin = 3, tiltPin = 2, buttonPin = 13; 
 
 void setup(){
   Serial.begin(9600);
@@ -12,6 +12,7 @@ void setup(){
   pan.attach(panPin);
   tilt.attach(tiltPin);
   pinMode(buttonPin, OUTPUT);
+  digitalWrite(buttonPin, HIGH);
   aim('Z', 'Z');
 }
 
@@ -53,9 +54,8 @@ void execute(String command) {
     release();
   }
   else if (command == "/aim") {
-    Serial.println(Serial.peek());
     while (Serial.available() < 2) {
-       
+       Serial.println(Serial.peek());
     }
     aim((int)Serial.read(), (int)Serial.read());
   }
