@@ -41,6 +41,7 @@ def on_message(ws, message):
         client = dropbox.client.DropboxClient(access_token)
         response = client.put_file('/' + date_time, f)
         print "Uploaded: ", response
+        play_audio_ubuntu("b")
     elif "pen" in message:
         print "Finding pen"
         idx.point_at_obj("pen")
@@ -61,7 +62,7 @@ def on_message(ws, message):
         light_on = not light_on
         print "Flipping light to " + str(light_on)
         idx.lazr.lamp(int(light_on))
-        play_audio_ubuntu("a")
+        play_audio_ubuntu("e")
     #play_audio_mac()
 
 
