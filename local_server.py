@@ -77,11 +77,17 @@ def on_open(ws):
 
 
 if __name__ == "__main__":
-    flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
-    authorize_url = flow.start()
-    print authorize_url
-    code = raw_input("Enter the authorization code here: ").strip()
-    access_token, user_id = flow.finish(code)
+    f = open('db_accesstoken.txt', 'r')
+    access_token = f.readline()
+    if not access_token:
+        flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
+        authorize_url = flow.start()
+        print authorize_url
+        code = raw_input("Enter the authorization code here: ").strip()
+        access_token, user_id = flow.finish(code)
+        f = open('db_accesstoken.txt', 'w')
+        f.write(access_token)
+        f.close()
 
     websocket.enableTrace(True)
     ws = websocket.WebSocketApp("ws://pythonscript.richiezeng.com:8888/ws",
