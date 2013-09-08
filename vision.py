@@ -16,9 +16,12 @@ class ContourClassifier(object):
         self.cam = cv2.VideoCapture(settings.camera_index)
         self.cam.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.WIDTH)
         self.cam.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.HEIGHT)
+        _, img_arr = self.cam.read()
+        img = Image(cv.fromarray(img_arr))
+        size = img.size()
+        self.WIDTH, self.HEIGHT = size
         if settings.use_simplecv_display:
-            _, img_arr = self.cam.read()
-            self.display = SimpleCV.Display(Image(cv.fromarray(img_arr)).size())
+            self.display = SimpleCV.Display(size)
         from train import classifier
         self.classifier = classifier
         self.objs = {}
@@ -34,7 +37,7 @@ class ContourClassifier(object):
             x = self.WIDTH - 1
         elif x < 0:
             x = 0
-        if y > self.HEIGHT:
+        if y >= self.HEIGHT:
             y = self.HEIGHT - 1
         elif y < 0:
             y = 0
@@ -44,31 +47,50 @@ class ContourClassifier(object):
         x,y,w,h = cv2.boundingRect(cnt)
         top_left_outer = self.enforce_size_restrictions(x-padding, y-padding)
         bottom_right_outer = self.enforce_size_restrictions(x+w+padding, y+h+padding)
+
+        cropped = img.crop(top_left_outer[0], top_left_outer[1],
+                        bottom_right_outer[0]-top_left_outer[0],
+                        bottom_right_outer[1]-top_left_outer[1])
+        if not cropped:
+            return None
+        w, h = cropped.size()
+
         if w > min_threshold and h > min_threshold and w < max_threshold and h < max_threshold:
             if draw:
-                cv2.rectangle(img_arr, top_left_outer, bottom_right_outer, (255,0,0), 1)
+                cv2.rectangle(img_arr, top_left_outer, (x+w+padding, y+h+padding), (255,0,0), 1)
                 cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,0,255), 1)
                 if debug:
                     cv2.putText(img_arr, "{0}x{1}".format(w,h), (x, y), 0, 0.5, (0,0,255))
-            if (bottom_right_outer[0]-top_left_outer[0] >= 0 and bottom_right_outer[1]-top_left_outer[1] >= 0):
-                return img.crop(top_left_outer[0], top_left_outer[1],
-                                bottom_right_outer[0]-top_left_outer[0],
-                                bottom_right_outer[1]-top_left_outer[1])
+        return None
 
     def add_observation(self, img_arr, draw=True):
-        img = Image(img_arr)
+        img = Image(cv.fromarray(img_arr))
         for cnt in self.find_contours(img_arr):
             obj_candidate = self.get_bounding_rect(cnt, img_arr, img, draw=draw)
             if obj_candidate:
-                try:
-                    obj = self.classifier.classify(obj_candidate)
-                    if obj != self.NEGATIVE_CLS:
-                        x,y,w,h = cv2.boundingRect(cnt)
-                        cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,255,0), 2)
-                        cv2.putText(img_arr, obj, (x, y), 0, 0.5, (0,255,0))
-                        """self.objs[obj] ="""
-                except IndexError:
-                    print "Wrong feature length."
+                x, y, obj_candidate = obj_candidate
+                width, height = obj_candidate.size()
+                print "size is", obj_candidate.size()
+                l = 45
+                for extractor in self.classifier.mFeatureExtractors:
+                    val = extractor.extract(obj_candidate)
+                    if not val:
+                        continue
+                    l -= len(extractor.extract(obj_candidate))
+                if l > 0:
+                    print "Wrong feature length", l
+                    continue
+
+                obj = self.classifier.classify(obj_candidate)
+                observation = ((x + width/2), (y + height/2)), 0.0
+                if obj == self.NEGATIVE_CLS:
+                    pass
+                elif obj in self.objs:
+                    self.objs[obj].add_observation(observation)
+                    # cv2.rectangle(img_arr, (x,y), (x+width,y+height), (255,0,0), 3)
+                    # cv.PutText(cv.fromarray(img_arr), obj, (x, y), thinFont, fontColor)
+                else:
+                    self.objs[obj] = VisionObjectFilter(observation, img.width, img.height, label=obj)
 
     def step(self, pause=False):
         try:
@@ -119,7 +141,7 @@ class VisionSystem(object):
         return cv.GetMat(img.getBitmap())
 
     def add_observation(self, img_arr, annotate=False):
-        img = Image(img_arr)
+        img = Image(cv.fromarray(img_arr))
         for x in xrange(0, img.width, self.dx/self.overlap_factor):
             if x + self.dx >= img.width:
                 continue
