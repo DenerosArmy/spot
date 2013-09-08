@@ -52,8 +52,11 @@ class ContourClassifier(object):
     def __init__(self, trainable=False):
         self.trainable = trainable
         self.cam = cv2.VideoCapture(settings.camera_index)
-        #self.cam.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.WIDTH)
-        #self.cam.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.HEIGHT)
+        self.show_overlays = True
+        if self.trainable:
+            self.show_overlays = False
+        # self.cam.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.WIDTH)
+        # self.cam.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.HEIGHT)
         _, img_arr = self.cam.read()
         img = Image(cv.fromarray(img_arr))
         size = img.size()
@@ -72,12 +75,6 @@ class ContourClassifier(object):
             cv.ShowImage("Index", cv.fromarray(img_arr))
             cv.WaitKey()
             cv.DestroyAllWindows()
-        #ret, bg_threshed = cv2.threshold(img_arr, 200, 255, cv2.THRESH_TRUNC)
-        #if debug:
-            #cv.ShowImage("Index", cv.fromarray(bg_threshed))
-            #cv.WaitKey()
-            #cv.DestroyAllWindows()
-        #hsv_img = cv2.cvtColor(bg_threshed, cv2.COLOR_BGR2HSV)
         hsv_img = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
         if debug:
             cv.ShowImage("Index", cv.fromarray(hsv_img))
@@ -134,7 +131,7 @@ class ContourClassifier(object):
             if obj_candidate:
                 x, y, obj_candidate = obj_candidate
                 width, height = obj_candidate.size()
-                l = 45
+                l = 45 
                 for extractor in self.classifier.mFeatureExtractors:
                     val = extractor.extract(obj_candidate)
                     if not val:
@@ -169,14 +166,17 @@ class ContourClassifier(object):
             retval, img_arr = self.cam.read()
             #cv2.imwrite(settings.base_path+'pics/pic1.jpg', img_arr)
             assert img_arr is not None, "Camera in use by other process"
-            self.add_observation(img_arr, draw=not self.trainable)
+            self.add_observation(img_arr, draw=self.show_overlays)
             if settings.use_simplecv_display:
                 if self.display.isDone():
                     raise SystemExit, "exiting"
                 img = Image(cv.fromarray(img_arr))
-                self.annotate_img(img)
+                if self.show_overlays or self.trainable:
+                    self.annotate_img(img)
                 img.save(self.display)
-                if self.display.mouseLeft or self.display.mouseRight:
+                if self.display.mouseLeft:
+                    self.show_overlays = not self.show_overlays
+                if self.display.mouseRight:
                     self.display.done = True
             else:
                 cv.ShowImage("Index", cv.fromarray(img_arr))

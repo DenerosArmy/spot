@@ -1,7 +1,7 @@
 import os
 import glob
 
-tags = ["pen", "arduino", "key", "negative", "blank"]
+tags = ["pen", "arduino", "negative", "blank"]
 
 if os.environ["USER"] == "nikita":
     base_path = "/home/nikita/dev/pinkie/"
