@@ -1,8 +1,6 @@
 from SimpleCV import *
-from settings import base_path
+from settings import base_path, tags
 import os
-
-tags = ["pen", "arduino", "key", "negative"]
 
 def train(tags):
     e = EdgeHistogramFeatureExtractor()

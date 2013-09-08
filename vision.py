@@ -5,14 +5,47 @@ from SimpleCV import *
 import cv
 import cv2
 import settings
+import os
+
+class TrainableClassifier(object):
+    def __init__(self, classifier):
+        self.classifier = classifier
+        self.js = JpegStreamer(8001)
+
+    def classify(self, img):
+        print "Image size is", img.size()
+        obj = self.classifier.classify(img)
+        if settings.use_simplecv_display:
+            img.save(self.js)
+        else:
+            print "ERROR: displaying images not implemented"
+        inp = ""
+        repeat = False
+        while inp not in settings.tags:
+            inp = raw_input("Classify {} <{}>".format("again" if repeat else "",obj))
+            if inp == "":
+                inp = obj
+                return obj # Don't add the image to the training set
+            repeat=True
+        t = tm.time()
+        filename = os.path.join(settings.base_path, "training_data", inp, "{}-{}.jpg".format(int(t), int((t - int(t)) * 100)))
+        img.save(filename)
+        print "Saved {}x{} image: {}".format(img.width, img.height, filename)
+        return inp
+
+    @property
+    def mFeatureExtractors(self):
+        return self.classifier.mFeatureExtractors
 
 class ContourClassifier(object):
 
     NEGATIVE_CLS = "negative"
+    BLANK_CLS = "blank"
     WIDTH = 1280
     HEIGHT = 720
 
-    def __init__(self):
+    def __init__(self, trainable=False):
+        self.trainable = trainable
         self.cam = cv2.VideoCapture(settings.camera_index)
         self.cam.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.WIDTH)
         self.cam.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.HEIGHT)
@@ -23,7 +56,10 @@ class ContourClassifier(object):
         if settings.use_simplecv_display:
             self.display = SimpleCV.Display(size)
         from train import classifier
-        self.classifier = classifier
+        if trainable:
+            self.classifier = TrainableClassifier(classifier)
+        else:
+            self.classifier = classifier
         self.objs = {}
 
     def find_contours(self, img_arr, debug=False):
@@ -99,20 +135,21 @@ class ContourClassifier(object):
 
                 obj = self.classifier.classify(obj_candidate)
                 observation = ((x + width/2), (y + height/2)), 0.0
-                if obj == self.NEGATIVE_CLS:
+                if obj == self.NEGATIVE_CLS or obj == self.BLANK_CLS:
                     pass
                 elif obj in self.objs:
                     self.objs[obj].add_observation(observation)
-                    cv2.rectangle(img_arr, (x,y), (x+width,y+height), (255,0,0), 3)
-                    fontFace = 0
-                    fontHscale = 0.75
-                    fontVscale = 0.75
-                    fontShear = 0
-                    fontThickness = 1
-                    thinFont = cv.InitFont(fontFace, fontHscale, fontVscale, fontShear, fontThickness)
-                    fontColor = cv.RGB(0, 0, 255)
+                    if draw:
+                        cv2.rectangle(img_arr, (x,y), (x+width,y+height), (255,0,0), 3)
+                        fontFace = 0
+                        fontHscale = 0.75
+                        fontVscale = 0.75
+                        fontShear = 0
+                        fontThickness = 1
+                        thinFont = cv.InitFont(fontFace, fontHscale, fontVscale, fontShear, fontThickness)
+                        fontColor = cv.RGB(0, 0, 255)
 
-                    cv.PutText(cv.fromarray(img_arr), obj, (x, y), thinFont, fontColor)
+                        cv.PutText(cv.fromarray(img_arr), obj, (x, y), thinFont, fontColor)
                 else:
                     self.objs[obj] = VisionObjectFilter(observation, img.width, img.height, label=obj)
 
@@ -120,7 +157,7 @@ class ContourClassifier(object):
         try:
             retval, img_arr = self.cam.read()
             assert img_arr is not None, "Camera in use by other process"
-            self.add_observation(img_arr)
+            self.add_observation(img_arr, draw=not self.trainable)
             if settings.use_simplecv_display:
                 if self.display.isDone():
                     raise SystemExit, "exiting"
