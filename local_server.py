@@ -1,5 +1,7 @@
+import subprocess
 import thread
 import time
+from random import choice
 
 import dropbox
 import websocket
@@ -11,6 +13,11 @@ from keys import app_key, app_secret
 
 access_token = ''
 idx = None
+
+
+def play_audio_mac():
+    sound = "sounds/R2D2" + choice(["a", "b", "c", "e"]) + ".wav"
+    return_code = subprocess.call(["afplay", sound])
 
 
 def on_message(ws, message):
@@ -30,6 +37,7 @@ def on_message(ws, message):
         print "Finding keys"
     elif "spot" in message:
         print "Beep beep"
+    play_audio_mac()
 
 
 def on_error(ws, error):
@@ -49,11 +57,11 @@ def on_open(ws):
 
 
 if __name__ == "__main__":
-    flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
-    authorize_url = flow.start()
-    print authorize_url
-    code = raw_input("Enter the authorization code here: ").strip()
-    access_token, user_id = flow.finish(code)
+    #flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
+    #authorize_url = flow.start()
+    #print authorize_url
+    #code = raw_input("Enter the authorization code here: ").strip()
+    #access_token, user_id = flow.finish(code)
 
     websocket.enableTrace(True)
     ws = websocket.WebSocketApp("ws://pythonscript.richiezeng.com:8888/ws",
