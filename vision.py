@@ -27,9 +27,22 @@ class ContourClassifier(object):
         self.objs = {}
 
     def find_contours(self, img_arr):
-        imgray = cv2.cvtColor(img_arr, cv2.COLOR_BGR2GRAY)
-        ret,thresh = cv2.threshold(imgray, 127, 255, 0)
-        contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        #cv.ShowImage("Index", cv.fromarray(img_arr))
+        #cv.WaitKey()
+        #cv.DestroyAllWindows()
+        hsv_img = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
+        #cv.ShowImage("Index", cv.fromarray(hsv_img))
+        #cv.WaitKey()
+        #cv.DestroyAllWindows()
+        HSV_MIN = np.array([0, 20, 0],np.uint8)
+        HSV_MAX = np.array([255, 255, 255],np.uint8)
+        frame_threshed = cv2.inRange(hsv_img, HSV_MIN, HSV_MAX)
+        imgray = frame_threshed
+        ret, thresh = cv2.threshold(imgray, 127, 255, 0)
+        #cv.ShowImage("Index", cv.fromarray(thresh))
+        #cv.WaitKey()
+        #cv.DestroyAllWindows()
+        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         return contours
 
     def enforce_size_restrictions(self, x, y):
@@ -43,7 +56,7 @@ class ContourClassifier(object):
             y = 0
         return x, y
 
-    def get_bounding_rect(self, cnt, img_arr, img, min_threshold=50, max_threshold=300, padding=10, draw=True, debug=True):
+    def get_bounding_rect(self, cnt, img_arr, img, min_threshold=75, max_threshold=300, padding=10, draw=True, debug=True):
         x,y,w,h = cv2.boundingRect(cnt)
         top_left_outer = self.enforce_size_restrictions(x-padding, y-padding)
         bottom_right_outer = self.enforce_size_restrictions(x+w+padding, y+h+padding)
@@ -60,6 +73,7 @@ class ContourClassifier(object):
                 cv2.rectangle(img_arr, top_left_outer, (x+w+padding, y+h+padding), (255,0,0), 1)
                 cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,0,255), 1)
                 if debug:
+                    cv2.drawContours(img_arr, [cnt] , -1, (0,255,0), 3)
                     cv2.putText(img_arr, "{0}x{1}".format(w,h), (x, y), 0, 0.5, (0,0,255))
             return x, y, cropped
         return None
@@ -116,7 +130,9 @@ class ContourClassifier(object):
             else:
                 cv.ShowImage("Index", cv.fromarray(img_arr))
                 if pause:
-                    raw_input("Press [enter] to continue")
+                    print("Press any key to continue")
+                    cv.WaitKey()
+                    cv.DestroyAllWindows()
             return True
         except KeyboardInterrupt:
             return False
