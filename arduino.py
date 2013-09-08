@@ -4,8 +4,12 @@ import math
 import scipy as sp
 
 class Lazr(object):
-    def __init__(self, port='/dev/ttyACM1', bps=9600):
+    def __init__(self, port='/dev/ttyACM0', bps=9600):
         self.ser = serial.Serial(port, bps)
+        self.ser.flush()
+        
+    def lamp(self, mode):
+		self.ser.write("/start/lampon/\n" if mode else "/start/lampoff/\n")
         self.ser.flush()
 
     def charge(self, mode):
