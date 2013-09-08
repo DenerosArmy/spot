@@ -13,7 +13,7 @@ void setup(){
   tilt.attach(tiltPin);
   pinMode(buttonPin, OUTPUT);
   digitalWrite(buttonPin, HIGH);
-  aim('Z', 'Z');
+  aim('Z', '(');
 }
 
 void loop() { 
