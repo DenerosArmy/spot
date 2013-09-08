@@ -6,7 +6,7 @@ if os.environ["USER"] == "nikita":
     # Get the highest-index camera available
     camera_index = sorted(glob.glob("/dev/video*"))[-1][10:]
     use_simplecv_display = True
-else:
+elif os.environ["USER"] == "jian":
     base_path = "/Users/jian/Projects/Pinkie/"
     #camera_index = sorted(glob.glob("/dev/video*"))[-1][10:]
     camera_index = 0

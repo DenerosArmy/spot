@@ -1,12 +1,18 @@
-from arduino import LazrSystem
-from vision import VisionSystem
+from arduino import Lazr
+from vision import ContourClassifier
+import scipy
+import settings
 
 
 class Index(object):
 
     def __init__(self):
         self.lazr = LazrSystem()
-        self.vsys = VisionSystem()
+        self.vsys = ContourClassifier()
+
+    def take_picture(self, filename):
+        retval, img_arr = self.vsys.cam.read()
+        scipy.misc.imsave(settings.base_path+'pics/'+filename, image_array)
 
     def point_at_coordinates(self, x, y):
         self.lazr.charge(True)

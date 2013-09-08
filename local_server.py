@@ -27,7 +27,6 @@ def on_error(ws, error):
 def on_close(ws):
     print "### closed ###"
 
-
 if __name__ == "__main__":
     flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
     authorize_url = flow.start()
