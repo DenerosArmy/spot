@@ -1,6 +1,7 @@
 import serial
 import time
 import math
+import scipy as sp
 
 class Lazr(object):
     def __init__(self, port='/dev/ttyACM1', bps=9600):
@@ -31,9 +32,9 @@ class Lazr(object):
 
 
     def convert_coordinates(self, x, y):
-        X, Y = (300, 480) # Coordinates of the camera mount, in img coordinates
-        scale_x, scale_y = (20.0, 20.0) # number of pixels per cm
-        height = 10 # height of the stand, in cm
+        X, Y = (960, 1500) # Coordinates of the camera mount, in img coordinates
+        scale_x, scale_y = (85.0, 28.0) # number of pixels per cm
+        height = 50 # height of the stand, in cm
         x = x - X
         y = -(y - Y) # note how imgs have inverted y-coordinates
 
@@ -67,13 +68,67 @@ class Lazr(object):
             elif val > high:
                 return high
             return val
-        theta = clamp(theta, 0, 90)
-        theta = 90 - theta
+        theta = clamp(theta, 0, 40)
+        theta = 40 - theta
 
-        phi = clamp(phi, 0, 90)
-        phi = phi + 90
+        phi = clamp(phi, 0, 180)
+        phi = phi
 
         # return int(theta), int(phi)
         return int(phi), int(theta)
+
+    def aim_to_xy_nn(self, x, y, cache=[]):
+        """Aim to x/y using nearest-neighbor algorithm"""
+        if len(cache) == 0:
+            with open("laser.calibration", "r") as f:
+                import pickle
+                cache.append(pickle.load(f))
+        d = cache[0]
+
+        x_, y_ = None, None
+        r_ = float('inf')
+        for xx, yy in d:
+            r = math.sqrt((x-xx)**2 + (y-yy)**2)
+            if r < r_:
+                r_ = r
+                x_, y_ = xx, yy
+        print "Aiming to", d[x_, y_]
+        self.aim(*d[x_, y_])
+
+    def aim_to_xy(self, x, y, cache=[]):
+        """Aim to x/y using spline interpolation algorithm"""
+        if not cache:
+            with open("laser.calibration", "r") as f:
+                import pickle
+                d = pickle.load(f)
+
+                items = d.items()
+                keys = [i[0] for i in items]
+                keys_x = [k[0] for k in keys]
+                keys_y = [k[1] for k in keys]
+                vals = [i[1] for i in items]
+                vals_x = [k[0] for k in vals]
+                vals_y = [k[1] for k in vals]
+
+                spline_x = sp.interpolate.bisplrep(keys_x, keys_y, vals_x)
+                spline_y = sp.interpolate.bisplrep(keys_x, keys_y, vals_y)
+                cache.extend([spline_x, spline_y])
+
+        spline_x, spline_y = cache
+        theta = int(sp.interpolate.bisplev(x, y, spline_x))
+        phi = int(sp.interpolate.bisplev(x, y, spline_y))
+
+        if theta < 0:
+            theta = 0
+        elif theta > 179:
+            theta = 179
+
+        if phi < 0:
+            phi = 0
+        elif phi > 40:
+            phi = 40
+
+        print "Aiming to", theta, phi
+        self.aim(theta, phi)
 
 l = Lazr()
