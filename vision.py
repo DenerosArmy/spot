@@ -71,15 +71,15 @@ class ContourClassifier(object):
             if obj_candidate:
                 x, y, obj_candidate = obj_candidate
                 width, height = obj_candidate.size()
-                # l = 45
-                # for extractor in self.classifier.mFeatureExtractors:
-                #     val = extractor.extract(obj_candidate)
-                #     if not val:
-                #         continue
-                #     l -= len(extractor.extract(obj_candidate))
-                # if l > 0:
-                #     print "Wrong feature length", l
-                #     continue
+                l = 45
+                for extractor in self.classifier.mFeatureExtractors:
+                    val = extractor.extract(obj_candidate)
+                    if not val:
+                        continue
+                    l -= len(extractor.extract(obj_candidate))
+                if l > 0:
+                    print "Wrong feature length", l
+                    continue
 
                 obj = self.classifier.classify(obj_candidate)
                 observation = ((x + width/2), (y + height/2)), 0.0
@@ -289,8 +289,8 @@ class KalmanFilter(object):
                           [0,0,1,0,0,0]])
       self.C_transpose = self.C.transpose()
       # BEGIN CRAP: These shouldn't be constants
-      self.ns = 0.1 # Process noise: Variability of how fast the tracked entity is moving (std of acceleration) # TWEAKME
-      self.nz = 0.1 # Measurement noise: Variability of measurements (how bad the measurements are) (std of acceleration) # TWEAKME
+      self.ns = 0.01 # Process noise: Variability of how fast the tracked entity is moving (std of acceleration) # TWEAKME
+      self.nz = 0.6 # Measurement noise: Variability of measurements (how bad the measurements are) (std of acceleration) # TWEAKME
       # END CRAP
       self.var_s = self.ns**2
       self.var_z = self.nz**2
