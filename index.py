@@ -1,6 +1,6 @@
 from arduino import Lazr
 from vision import ContourClassifier
-import scipy
+import cv2
 import settings
 
 
@@ -12,7 +12,7 @@ class Index(object):
 
     def take_picture(self, filename):
         retval, img_arr = self.vsys.cam.read()
-        scipy.misc.imsave(settings.base_path+'pics/'+filename, image_array)
+        cv2.imwrite(settings.base_path+'pics/'+filename, image_array)
 
     def point_at_coordinates(self, x, y):
         self.lazr.charge(True)

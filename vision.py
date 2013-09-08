@@ -44,6 +44,11 @@ class ContourClassifier(object):
     WIDTH = 1280
     HEIGHT = 720
 
+    SAT_THRES = 50 # 25
+    MIN_SIZE_THRES = 50 # 70
+    MAX_SIZE_THRES = 300
+    FRAME_PADDING = 10
+
     def __init__(self, trainable=False):
         self.trainable = trainable
         self.cam = cv2.VideoCapture(settings.camera_index)
@@ -62,17 +67,23 @@ class ContourClassifier(object):
             self.classifier = classifier
         self.objs = {}
 
-    def find_contours(self, img_arr, debug=False):
+    def find_contours(self, img_arr, debug=True):
         if debug:
             cv.ShowImage("Index", cv.fromarray(img_arr))
             cv.WaitKey()
             cv.DestroyAllWindows()
+        #ret, bg_threshed = cv2.threshold(img_arr, 200, 255, cv2.THRESH_TRUNC)
+        #if debug:
+            #cv.ShowImage("Index", cv.fromarray(bg_threshed))
+            #cv.WaitKey()
+            #cv.DestroyAllWindows()
+        #hsv_img = cv2.cvtColor(bg_threshed, cv2.COLOR_BGR2HSV)
         hsv_img = cv2.cvtColor(img_arr, cv2.COLOR_BGR2HSV)
         if debug:
             cv.ShowImage("Index", cv.fromarray(hsv_img))
             cv.WaitKey()
             cv.DestroyAllWindows()
-        HSV_MIN = np.array([0, 20, 0],np.uint8)
+        HSV_MIN = np.array([0, self.SAT_THRES, 20],np.uint8)
         HSV_MAX = np.array([255, 255, 255],np.uint8)
         frame_threshed = cv2.inRange(hsv_img, HSV_MIN, HSV_MAX)
         ret, thresh = cv2.threshold(frame_threshed, 127, 255, 0)
@@ -94,10 +105,10 @@ class ContourClassifier(object):
             y = 0
         return x, y
 
-    def get_bounding_rect(self, cnt, img_arr, img, min_threshold=70, max_threshold=300, padding=10, draw=True, debug=True):
+    def get_bounding_rect(self, cnt, img_arr, img, draw=True, debug=True):
         x,y,w,h = cv2.boundingRect(cnt)
-        top_left_outer = self.enforce_size_restrictions(x-padding, y-padding)
-        bottom_right_outer = self.enforce_size_restrictions(x+w+padding, y+h+padding)
+        top_left_outer = self.enforce_size_restrictions(x-self.FRAME_PADDING, y-self.FRAME_PADDING)
+        bottom_right_outer = self.enforce_size_restrictions(x+w+self.FRAME_PADDING, y+h+self.FRAME_PADDING)
 
         cropped = img.crop(top_left_outer[0], top_left_outer[1],
                         bottom_right_outer[0]-top_left_outer[0],
@@ -106,9 +117,9 @@ class ContourClassifier(object):
             return None
         w, h = cropped.size()
 
-        if w > min_threshold and h > min_threshold and w < max_threshold and h < max_threshold:
+        if w > self.MIN_SIZE_THRES and h > self.MIN_SIZE_THRES and w < self.MAX_SIZE_THRES and h < self.MAX_SIZE_THRES:
             if draw:
-                cv2.rectangle(img_arr, top_left_outer, (x+w+padding, y+h+padding), (255,0,0), 1)
+                cv2.rectangle(img_arr, top_left_outer, (x+w+self.FRAME_PADDING, y+h+self.FRAME_PADDING), (255,0,0), 1)
                 cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,0,255), 1)
                 if debug:
                     cv2.drawContours(img_arr, [cnt] , -1, (0,255,0), 3)
@@ -156,6 +167,7 @@ class ContourClassifier(object):
     def step(self, pause=False):
         try:
             retval, img_arr = self.cam.read()
+            #cv2.imwrite(settings.base_path+'pics/pic1.jpg', img_arr)
             assert img_arr is not None, "Camera in use by other process"
             self.add_observation(img_arr, draw=not self.trainable)
             if settings.use_simplecv_display:
