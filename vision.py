@@ -47,8 +47,8 @@ class ContourClassifier(object):
     def __init__(self, trainable=False):
         self.trainable = trainable
         self.cam = cv2.VideoCapture(settings.camera_index)
-        self.cam.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.WIDTH)
-        self.cam.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.HEIGHT)
+        #self.cam.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.WIDTH)
+        #self.cam.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.HEIGHT)
         _, img_arr = self.cam.read()
         img = Image(cv.fromarray(img_arr))
         size = img.size()
@@ -72,7 +72,7 @@ class ContourClassifier(object):
             cv.ShowImage("Index", cv.fromarray(hsv_img))
             cv.WaitKey()
             cv.DestroyAllWindows()
-        HSV_MIN = np.array([0, 20, 0],np.uint8)
+        HSV_MIN = np.array([0, 20, 20],np.uint8)
         HSV_MAX = np.array([255, 255, 255],np.uint8)
         frame_threshed = cv2.inRange(hsv_img, HSV_MIN, HSV_MAX)
         ret, thresh = cv2.threshold(frame_threshed, 127, 255, 0)
@@ -112,7 +112,7 @@ class ContourClassifier(object):
                 cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,0,255), 1)
                 if debug:
                     cv2.drawContours(img_arr, [cnt] , -1, (0,255,0), 3)
-                    cv2.putText(img_arr, "{0}x{1}".format(w,h), (x, y), 0, 0.5, (0,0,255))
+                    #cv2.putText(img_arr, "{0}x{1}".format(w,h), (x, y), 0, 0.5, (0,0,255))
             return x, y, cropped
         return None
 
