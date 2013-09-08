@@ -287,7 +287,7 @@ if (!('webkitSpeechRecognition' in window)) {
       }
     }
 
-		var keywords = ["pen", "10", "pan", "pants", "iPad", "Arduino", "art", "Rd", "Argentina", "keys", "key", "Mikey"];
+		var keywords = ["pen", "10", "pan", "pants", "iPad", "Arduino", "art", "Rd", "Argentina", "keys", "key", "Mikey", "picture", "photo"];
 		for (var i = 0; i < keywords.length; i++) {
 			if (final_transcript.search(keywords[i]) != -1) {
 				console.log("Detected " + keywords[i]);

@@ -61,6 +61,7 @@ class ContourClassifier(object):
                 cv2.rectangle(img_arr, (x,y), (x+w,y+h), (0,0,255), 1)
                 if debug:
                     cv2.putText(img_arr, "{0}x{1}".format(w,h), (x, y), 0, 0.5, (0,0,255))
+            return x, y, cropped
         return None
 
     def add_observation(self, img_arr, draw=True):
@@ -70,7 +71,6 @@ class ContourClassifier(object):
             if obj_candidate:
                 x, y, obj_candidate = obj_candidate
                 width, height = obj_candidate.size()
-                print "size is", obj_candidate.size()
                 l = 45
                 for extractor in self.classifier.mFeatureExtractors:
                     val = extractor.extract(obj_candidate)
@@ -87,8 +87,16 @@ class ContourClassifier(object):
                     pass
                 elif obj in self.objs:
                     self.objs[obj].add_observation(observation)
-                    # cv2.rectangle(img_arr, (x,y), (x+width,y+height), (255,0,0), 3)
-                    # cv.PutText(cv.fromarray(img_arr), obj, (x, y), thinFont, fontColor)
+                    cv2.rectangle(img_arr, (x,y), (x+width,y+height), (255,0,0), 3)
+                    fontFace = 0
+                    fontHscale = 0.75
+                    fontVscale = 0.75
+                    fontShear = 0
+                    fontThickness = 1
+                    thinFont = cv.InitFont(fontFace, fontHscale, fontVscale, fontShear, fontThickness)
+                    fontColor = cv.RGB(0, 0, 255)
+
+                    cv.PutText(cv.fromarray(img_arr), obj, (x, y), thinFont, fontColor)
                 else:
                     self.objs[obj] = VisionObjectFilter(observation, img.width, img.height, label=obj)
 
@@ -100,7 +108,9 @@ class ContourClassifier(object):
             if settings.use_simplecv_display:
                 if self.display.isDone():
                     raise SystemExit, "exiting"
-                SimpleCV.Image(cv.fromarray(img_arr)).save(self.display)
+                img = Image(cv.fromarray(img_arr))
+                self.annotate_img(img)
+                img.save(self.display)
                 if self.display.mouseLeft or self.display.mouseRight:
                     self.display.done = True
             else:
@@ -111,6 +121,27 @@ class ContourClassifier(object):
         except KeyboardInterrupt:
             return False
 
+    def annotate_img(self, img):
+        if not settings.use_simplecv_display:
+            pass
+        for obj in self.objs:
+            try:
+                x, y = self.get_state(obj)
+                x = int(x)
+                y = int(y)
+            except TypeError:
+                continue
+            img.drawRectangle(x-25, y-25, 25, 25, Color.CYAN)
+            img.drawText(obj, x-25, y-25, Color.CYAN)
+
+    def get_state(self, obj):
+        if obj not in self.objs:
+            return None
+        try:
+            (x, y), z = self.objs[obj].infer_state()
+            return x, y
+        except ValueError:
+            return None
 
 class VisionSystem(object):
 
@@ -258,8 +289,8 @@ class KalmanFilter(object):
                           [0,0,1,0,0,0]])
       self.C_transpose = self.C.transpose()
       # BEGIN CRAP: These shouldn't be constants
-      self.ns = 0.1 # Process noise: Variability of how fast the tracked entity is moving (std of acceleration) # TWEAKME
-      self.nz = 0.1 # Measurement noise: Variability of measurements (how bad the measurements are) (std of acceleration) # TWEAKME
+      self.ns = 0.01 # Process noise: Variability of how fast the tracked entity is moving (std of acceleration) # TWEAKME
+      self.nz = 0.6 # Measurement noise: Variability of measurements (how bad the measurements are) (std of acceleration) # TWEAKME
       # END CRAP
       self.var_s = self.ns**2
       self.var_z = self.nz**2
