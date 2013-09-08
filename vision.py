@@ -37,8 +37,7 @@ class ContourClassifier(object):
         HSV_MIN = np.array([0, 20, 0],np.uint8)
         HSV_MAX = np.array([255, 255, 255],np.uint8)
         frame_threshed = cv2.inRange(hsv_img, HSV_MIN, HSV_MAX)
-        imgray = frame_threshed
-        ret, thresh = cv2.threshold(imgray, 127, 255, 0)
+        ret, thresh = cv2.threshold(frame_threshed, 127, 255, 0)
         #cv.ShowImage("Index", cv.fromarray(thresh))
         #cv.WaitKey()
         #cv.DestroyAllWindows()
