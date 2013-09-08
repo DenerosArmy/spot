@@ -13,5 +13,10 @@ elif os.environ["USER"] == "jian":
     #camera_index = sorted(glob.glob("/dev/video*"))[-1][10:]
     camera_index = 0
     use_simplecv_display = False
+elif os.environ["USER"] == "richzeng":
+    base_path = "/Users/richzeng/code/pinkie/"
+    #camera_index = sorted(glob.glob("/dev/video*"))[-1][10:]
+    camera_index = 0
+    use_simplecv_display = False
 
 camera_index = int(camera_index)

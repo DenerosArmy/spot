@@ -278,31 +278,30 @@ if (!('webkitSpeechRecognition' in window)) {
   };
 
   recognition.onresult = function(event) {
-    var interim_transcript = '';
-    for (var i = event.resultIndex; i < event.results.length; ++i) {
-      if (event.results[i].isFinal) {
-        final_transcript += event.results[i][0].transcript;
-      } else {
-        interim_transcript += event.results[i][0].transcript;
-      }
-    }
-
 		var foundWords = [];
 		var keywords = {
 			"pen": ["pen", "10", "pan", "pants", "iPad", "Penn"],
-			"arduino": ["Arduino", "art", "Rd", "Argentina"],
+			"arduino": ["Arduino", "art", "Rd", "Argentina", "wiener", "Wiener", "Arlington", "RV", "arm", "RB", "Reno", "Arlena",],
 			"keys": ["keys", "key", "Mikey", "Nike", "Nikes", "keez"],
 			"photo": ["picture", "photo"],
 			"spot": ["spot", "Scott", "Facebook", "pot"],
 			"lights": ["light", "lights", "Lights", "Light", "life"],
 		};
+    var interim_transcript = '';
 
-		for (var word in keywords) {
-			for (var i = 0; i < keywords[word].length; i++) {
-				if (final_transcript.search(keywords[word][i]) != -1) {
-					console.log("Detected " + keywords[word][i]);
-					foundWords.push(word);
-					break;
+    for (var i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        final_transcript += event.results[i][0].transcript;
+			} else {
+				interim_transcript += event.results[i][0].transcript;
+				for (var word in keywords) {
+					for (var i = 0; i < keywords[word].length; i++) {
+						if (interim_transcript.search(keywords[word][i]) != -1) {
+							console.log("Detected " + keywords[word][i]);
+							foundWords.push(word);
+							break;
+						}
+					}
 				}
 			}
 		}

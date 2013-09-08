@@ -14,6 +14,7 @@ from keys import app_key, app_secret
 access_token = ''
 idx = None
 light_on = False
+last_message_time = time.time()
 
 
 def play_audio_mac():
@@ -28,6 +29,10 @@ def play_audio_ubuntu(letter):
 
 
 def on_message(ws, message):
+    global last_message_time
+    if time.time() - last_message_time < 0.25:
+        return
+    last_message_time = time.time()
     print message
     if access_token and "photo" in message:
         date_time = time.strftime("IMG_%Y-%m-%d_%H:%M:%S.png", time.gmtime())
