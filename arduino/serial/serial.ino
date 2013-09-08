@@ -1,10 +1,10 @@
-#include <Servo.h> 
+#include <Servo.h>
 
 String incomingString = String("");
 Servo pan, tilt;
 
 int theta = 0, phi = 0;
-int panPin = 3, tiltPin = 2, buttonPin = 13; 
+int panPin = 3, tiltPin = 2, buttonPin = 13, lampPin = 10 ; 
 
 void setup(){
   Serial.begin(9600);
@@ -12,8 +12,9 @@ void setup(){
   pan.attach(panPin);
   tilt.attach(tiltPin);
   pinMode(buttonPin, OUTPUT);
-  digitalWrite(buttonPin, HIGH);
-  aim('Z', 'Z');
+  press();
+  lampon();
+  aim('Z', '(');
 }
 
 void loop() { 
@@ -66,6 +67,22 @@ void execute(String command) {
     }
     line((int)Serial.read(), (int)Serial.read(), (int)Serial.read(), (int)Serial.read(), (int)Serial.read(), (int)Serial.read());
   }
+  else if (command == "/lampon") {
+    Serial.println("turning on lamp");
+    lampon(); 
+  }
+  else if (command == "/lampoff") {
+    Serial.println("turning off lamp");
+    lampoff(); 
+  }
+}
+
+void lampon() {
+  digitalWrite(lampPin, HIGH);
+}
+
+void lampoff() {
+  digitalWrite(lampPin, LOW);
 }
 
 void press() {
