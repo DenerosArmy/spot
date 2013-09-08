@@ -3,6 +3,7 @@ from vision import ContourClassifier
 import scipy
 import settings
 import os
+import SimpleCV
 
 
 class Index(object):
@@ -13,7 +14,10 @@ class Index(object):
 
     def take_picture(self, filename):
         retval, img_arr = self.vsys.cam.read()
-        scipy.misc.imsave(os.path.join(settings.base_path,'pics',filename), img_arr)
+        img = SimpleCV.Image(SimpleCV.cv.fromarray(img_arr))
+        img = img.rotate(180)
+        img.save(os.path.join(settings.base_path,'pics',filename))
+        # scipy.misc.imsave(os.path.join(settings.base_path,'pics',filename), img_arr)
 
     def point_at_coordinates(self, x, y):
         self.lazr.charge(True)

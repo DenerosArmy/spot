@@ -6,7 +6,7 @@ from random import choice
 import dropbox
 import websocket
 
-#import settings
+import settings
 from index import Index
 from keys import app_key, app_secret
 
@@ -32,7 +32,7 @@ def on_message(ws, message):
     if access_token and "photo" in message:
         date_time = time.strftime("IMG_%Y-%m-%d_%H:%M:%S.png", time.gmtime())
         idx.take_picture(date_time)
-        f = open(settings.base_path + 'pics/' + filename)
+        f = open(settings.base_path + 'pics/' + date_time)
         client = dropbox.client.DropboxClient(access_token)
         response = client.put_file('/' + date_time, f)
         print "Uploaded: ", response
